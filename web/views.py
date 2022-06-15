@@ -1,12 +1,10 @@
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect  # для отображения и редиректа берем необходимые классы
+from .models import RTDays, Category  # не забываем наши модели
 
-# Create your views here.
-def index(request):
+
+def home(request):
     return render(request, 'RTDaylist.html')
-
-def about(request):
-    return HttpResponse('<h1>This is About page</h1>')
 
 # def reverse(request):
 #     usertext = request.GET['usertext']
@@ -19,5 +17,53 @@ def about(request):
 #     }
 #     return render(request, 'web/reverse.html', context=context)
 
-def homepage(request):
-    return render('<h1>Возврат на главную страницу</h1>')
+def about(request):
+    return render(request, 'base.html')
+
+
+def RTD(request):
+    rtdays = RTDays.objects.all()  # запрашиваем все объекты todo через менеджер объектов
+    categories = Category.objects.all()  # так же получаем все Категории
+    if request.method == "POST":  # проверяем то что метод именно POST
+        if "Add" in request.POST:  # проверяем метод добавления todo
+            title = request.POST["description"]  # сам текст
+            date = str(request.POST["date"])  # дата, до которой должно быть закончено дело
+        category = request.POST["category_select"]  # категория, которой может выбрать или создать пользователь.
+        content = title + " -- " + date + " " + category  # полный склеенный контент
+        RTDay = RTDays(title=title, content=content, due_date=date, category=Category.objects.get(name=category))
+        RTDay.save()  # сохранение нашего дела
+    return redirect("/todo")  # перегрузка страницы (ну вот так у нас будет устроено очищение формы)
+
+
+    if "Delete" in request.POST:  # если пользователь собирается удалить одно дело
+        checkedlist = request.POST.getlist('checkedbox')  # берем список выделенные дел, которые мы собираемся удалить
+        for i in range(len(checkedlist)):  # мне почему-то не нравится эта конструкция
+            RTDay = RTDays().objects.filter(id=int(checkedlist[i]))
+            RTDay.delete()  # удаление дела
+    return render(request, "RTDaylist.html", {"rtdays": rtdays, "categories": categories})
+
+
+def category(request):
+    categories = Category.objects.all()  # запрашиваем все объекты Категорий
+    if request.method == "POST":  # проверяем что это метод POST
+        if "Add" in request.POST:  # если собираемся добавить
+            name = request.POST["name"]  # имя нашей категории
+            category = Category(name=name)  # у нашей категории есть только имя
+    category.save()  # сохранение нашей категории
+    return redirect("/category")
+
+
+    if "Delete" in request.POST:  # проверяем есть ли удаление
+        check = request.POST.getlist(
+            'check')  # немного изменил название массива в отличии от todo, что бы было меньше путаницы в коде
+        for i in range(len(check)):
+            try:
+                categ = Category.objects.filter(id=int(check[i]))
+                categ.delete()  # удаление категории
+            except BaseException:  # вне сомнения тут нужно нормально переписать обработку ошибок, но на первое время хватит и этого
+                return HttpResponse('<h1>Сначала удалите карточки с этими категориями)</h1>')
+    return render(request, "category.html", {"categories": categories})
+
+
+def redirect_view(request):
+    return redirect("/category")  # редирект с главной на категории
