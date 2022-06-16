@@ -1,10 +1,11 @@
-
+#import whitenoise
 from django.urls import path
-# from web.views import index, about
-#from django.conf.urls import url
 from django.contrib import admin
+from web import views
 from web.views import RTD, home
 from web.views import category
+# from web.views import index, about
+#from django.conf.urls import url
 from web.views import redirect_view
 # urlpatterns = [
 #     path('home/', index, name='home'),
@@ -14,12 +15,13 @@ from web.views import redirect_view
 # urlpatterns = [
 # 	url(r'$^', redirect_view ),
 # 	url(r'^admin/', admin.site.urls),
-# 	url(r'^todo/', RTDay, name="RTDayList"),
+# 	url(r'^RTDay/', RTDay, name="RTDayList"),
 # 	url(r'^category/', category, name="Category"),
 urlpatterns = [
-	path(' ', redirect_view),
+	path('', views.home),
 	path('home/', home, name='Home'),
 	path('admin/', admin.site.urls),
-	path('RTDay/', RTD, name="RTDayList"),
+	#path('web/', RTD, name="RTDayList"),
+	#path('RTDay/', RTD, name="RTDayList"),
 	path('category/', category, name="Category"),
 ]
